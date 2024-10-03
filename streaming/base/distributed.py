@@ -4,7 +4,7 @@
 """Helper methods to get the distributed attributes."""
 
 import os
-from typing import TypeVar, cast
+from typing import TypeVar, cast, Any
 
 import torch.distributed as dist
 
@@ -20,21 +20,25 @@ __all__ = [
 ]
 
 
-def get_rank() -> int:
+def get_rank(process_group: Any = None) -> int:
     """Returns the rank of the current process, which is on ``[0; WORLD_SIZE - 1]``.
 
     Returns:
         int: The rank.
     """
+    if process_group is not None:
+        return dist.get_rank(process_group)
     return int(os.environ.get('RANK', 0))
 
 
-def get_world_size() -> int:
+def get_world_size(process_group: Any = None) -> int:
     """Returns the world size, which is the number of processes participating in this training run.
 
     Returns:
         int: The world size.
     """
+    if process_group is not None:
+        return dist.get_world_size(process_group)
     return int(os.environ.get('WORLD_SIZE', 1))
 
 
@@ -44,6 +48,8 @@ def get_local_rank() -> int:
     Returns:
         int: The local rank.
     """
+    if 'LOCAL_DP_RANK'in os.environ:
+        return int(os.environ.get('LOCAL_DP_RANK', 0))
     return int(os.environ.get('LOCAL_RANK', 0))
 
 
@@ -53,13 +59,14 @@ def get_local_world_size() -> int:
     Returns:
         int: The local world size.
     """
-    return int(os.environ.get('LOCAL_WORLD_SIZE', 1))
+    if 'LOCAL_DP_RANK'in os.environ:
+        return int(os.environ.get('LOCAL_DP_WORLD_SIZE', 0))
+    return int(os.environ.get('LOCAL_WORLD_SIZE', 0))
 
-
-def barrier() -> None:
+def barrier(process_group: Any = None) -> None:
     """Synchronizes all processes."""
     if dist.is_available() and dist.is_initialized():
-        dist.barrier()
+        dist.barrier(process_group)
 
 
 def broadcast(tensor: Tensor, src: int) -> None:

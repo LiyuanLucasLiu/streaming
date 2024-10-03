@@ -88,15 +88,15 @@ class World:
         return ret
 
     @classmethod
-    def detect(cls) -> Self:
+    def detect(cls, process_group: Any = None) -> Self:
         """Detect the world state.
 
         Returns:
             Self: A new World state object according to dist and get_worker_info().
         """
-        rank = dist.get_rank()
+        rank = dist.get_rank(process_group)
         ranks_per_node = dist.get_local_world_size()
-        num_nodes = dist.get_world_size() // ranks_per_node
+        num_nodes = dist.get_world_size(process_group) // ranks_per_node
         worker_of_rank, workers_per_rank = cls._get_worker_info()
         worker = rank * workers_per_rank + worker_of_rank
         return cls(num_nodes, ranks_per_node, workers_per_rank, worker)
