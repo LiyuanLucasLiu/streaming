@@ -536,7 +536,7 @@ class StreamingDataset(Array, IterableDataset):
         self._shm_prefix_int, self._locals_shm = get_shm_prefix(streams_local, 
                                                                 streams_remote,
                                                                 self._unique_rank_world,
-                                                                dp_process_group=self.dp_process_group)
+                                                                dataloader_process_group=self.dataloader_process_group)
         self._filelock_root = os.path.join(gettempdir(), 'streaming')
         os.makedirs(self._filelock_root, exist_ok=True)
 
