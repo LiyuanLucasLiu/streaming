@@ -350,6 +350,9 @@ class StreamingDataset(Array, IterableDataset):
         self.replication = replication
         self.process_group = process_group
 
+        assert process_group is not None, 'You must provide data-parallel group as `process_group`'
+        assert replication is None, 'You must provide data-parallel group as `process_group`'
+        
         # Initialize the World context.
         #   * This information is for the per-rank or per-worker process.
         #   * DataLoader worker processes may get a different worker ID and worker count than rank.
@@ -359,12 +362,12 @@ class StreamingDataset(Array, IterableDataset):
         #   * `parallel_` is who we think we are for iterating purposes, where groups of process
         #     must act the same if `replication` is specified.
         #     This can enable tensor or sequence parallelism.
-        world = World.detect(self.process_group)
+        world = World.detect(None)
         self._unique_rank_world = world
-        if replication is not None:
-            self._parallel_rank_world = world.replicate(replication)
-        else:
-            self._parallel_rank_world = world.copy()
+        # if replication is not None:
+        #     self._parallel_rank_world = world.replicate(replication)
+        # else:
+        self._parallel_rank_world = World.detect(self.process_group)
         self._unique_worker_world: World
         self._parallel_worker_world: World
 

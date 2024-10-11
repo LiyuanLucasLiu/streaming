@@ -53,15 +53,16 @@ def get_local_rank() -> int:
     return int(os.environ.get('LOCAL_RANK', 0))
 
 
-def get_local_world_size() -> int:
+def get_local_world_size(process_group: Any = None) -> int:
     """Returns the local world size, which is the number of processes for the current node.
 
     Returns:
         int: The local world size.
     """
-    if 'LOCAL_DP_RANK'in os.environ:
+    if process_group is not None:
         return int(os.environ.get('LOCAL_DP_WORLD_SIZE', 0))
-    return int(os.environ.get('LOCAL_WORLD_SIZE', 0))
+    else:
+        return int(os.environ.get('LOCAL_WORLD_SIZE', 0))
 
 def barrier(process_group: Any = None) -> None:
     """Synchronizes all processes."""

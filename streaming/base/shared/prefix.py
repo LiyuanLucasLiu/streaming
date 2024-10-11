@@ -11,6 +11,7 @@ from collections import Counter
 from time import sleep
 from typing import Iterator, Union, Any
 
+import os
 import numpy as np
 from torch import distributed as dist
 
@@ -41,7 +42,7 @@ def _get_path(prefix_int: int, name: str) -> str:
     Returns:
         str: Unique shared memory name.
     """
-    return f'{prefix_int:06}_{name}'
+    return f'{os.environ.get("STREAMING_RUN_ID","")}{prefix_int:06}_{name}'
 
 
 def _pack_locals(dirnames: list[str], prefix_int: int) -> bytes:

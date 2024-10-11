@@ -95,7 +95,7 @@ class World:
             Self: A new World state object according to dist and get_worker_info().
         """
         rank = dist.get_rank(process_group)
-        ranks_per_node = dist.get_local_world_size()
+        ranks_per_node = dist.get_local_world_size(process_group)
         num_nodes = dist.get_world_size(process_group) // ranks_per_node
         worker_of_rank, workers_per_rank = cls._get_worker_info()
         worker = rank * workers_per_rank + worker_of_rank
