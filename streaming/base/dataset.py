@@ -332,7 +332,8 @@ class StreamingDataset(Array, IterableDataset):
                  batching_method: str = 'random',
                  allow_unsafe_types: bool = False,
                  replication: Optional[int] = None,
-                 process_group: Any = None) -> None:
+                 dp_process_group: Any = None,
+                 dataloader_process_group: Any = None) -> None:
         # Global arguments (which do not live in Streams).
         self.predownload = predownload
         self.cache_limit = cache_limit
@@ -348,9 +349,10 @@ class StreamingDataset(Array, IterableDataset):
         self.batching_method = batching_method
         self.allow_unsafe_types = allow_unsafe_types
         self.replication = replication
-        self.process_group = process_group
+        self.dp_process_group = dp_process_group
+        self.dataloader_process_group = dataloader_process_group
 
-        assert process_group is not None, 'You must provide data-parallel group as `process_group`'
+        assert dp_process_group is not None, 'You must provide data-parallel group as `process_group`'
         assert replication is None, 'You must provide data-parallel group as `process_group`'
         
         # Initialize the World context.
@@ -362,12 +364,12 @@ class StreamingDataset(Array, IterableDataset):
         #   * `parallel_` is who we think we are for iterating purposes, where groups of process
         #     must act the same if `replication` is specified.
         #     This can enable tensor or sequence parallelism.
-        world = World.detect(None)
+        world = World.detect(self.dataloader_process_group) # this needs to be fixed...., since we only use dataloader in 1st and last stages
         self._unique_rank_world = world
         # if replication is not None:
         #     self._parallel_rank_world = world.replicate(replication)
         # else:
-        self._parallel_rank_world = World.detect(self.process_group)
+        self._parallel_rank_world = World.detect(self.dp_process_group)
         self._unique_worker_world: World
         self._parallel_worker_world: World
 
@@ -534,7 +536,7 @@ class StreamingDataset(Array, IterableDataset):
         self._shm_prefix_int, self._locals_shm = get_shm_prefix(streams_local, 
                                                                 streams_remote,
                                                                 self._unique_rank_world,
-                                                                process_group=self.process_group)
+                                                                dp_process_group=self.dp_process_group)
         self._filelock_root = os.path.join(gettempdir(), 'streaming')
         os.makedirs(self._filelock_root, exist_ok=True)
 
@@ -593,7 +595,7 @@ class StreamingDataset(Array, IterableDataset):
                 self._shard_access_times[shard_id] = time_ns()
 
         if dist.is_available() and dist.is_initialized():
-            dist.barrier(self.process_group)
+            dist.barrier(self.dataloader_process_group)
 
         if destroy_dist:
             dist.destroy_process_group()

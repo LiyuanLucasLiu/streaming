@@ -166,7 +166,7 @@ def number_abbrev_to_int(abbrev_str: Union[int, str]) -> int:
             ]))
 
 
-def clean_stale_shared_memory() -> None:
+def clean_stale_shared_memory(dataloader_process_group: Any = None) -> None:
     """Clean up all the leaked shared memory.
 
     In case of a distributed run, clean up happens on local rank 0 while other local ranks wait for
@@ -176,7 +176,7 @@ def clean_stale_shared_memory() -> None:
     destroy_dist = maybe_init_dist()
 
     # Perform clean up on local rank 0
-    if get_local_rank() == 0:
+    if get_local_rank(dataloader_process_group) == 0:
         for prefix_int in range(1000000):
             leaked_shm = False
             for shm_name in SHM_TO_CLEAN:

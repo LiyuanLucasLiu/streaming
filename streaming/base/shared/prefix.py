@@ -167,7 +167,7 @@ def get_shm_prefix(streams_local: list[str],
                    streams_remote: list[Union[str, None]],
                    world: World,
                    retry: int = 100,
-                   process_group: Any = None) -> tuple[int, SharedMemory]:
+                   dp_process_group: Any = None) -> tuple[int, SharedMemory]:
     """Register or lookup our shared memory prefix.
 
     Args:
@@ -195,7 +195,7 @@ def get_shm_prefix(streams_local: list[str],
         shm.buf[:len(data)] = data
 
     if dist.is_available() and dist.is_initialized():
-        dist.barrier(process_group)
+        dist.barrier(dp_process_group)
 
     # Non-local leaders go next, searching for match.
     if not world.is_local_leader:

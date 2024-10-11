@@ -7,7 +7,7 @@ import hashlib
 import json
 import os
 import tempfile
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -99,7 +99,8 @@ class Stream:
                  download_retry: Optional[int] = None,
                  download_timeout: Optional[float] = None,
                  validate_hash: Optional[str] = None,
-                 keep_zip: Optional[bool] = None) -> None:
+                 keep_zip: Optional[bool] = None,
+                 dataloader_process_group: Any = None) -> None:
         self.remote = remote
         self._local = local
         self.split = split or ''
@@ -145,7 +146,7 @@ class Stream:
 
         if local is None:
             self.local = self._get_temporary_directory()
-            if get_local_rank() == 0:
+            if get_local_rank(dataloader_process_group) == 0:
                 if os.path.exists(self.local):
                     raise FileExistsError(
                         f'Could not create a temporary local directory {self.local} because it ' +

@@ -42,25 +42,36 @@ def get_world_size(process_group: Any = None) -> int:
     return int(os.environ.get('WORLD_SIZE', 1))
 
 
-def get_local_rank() -> int:
+def get_local_rank(dataloader_process_group: Any = None) -> int:
     """Returns the local rank for the current process, which is on ``[0; LOCAL_WORLD_SIZE - 1]``.
 
     Returns:
         int: The local rank.
     """
-    if 'LOCAL_DP_RANK'in os.environ:
-        return int(os.environ.get('LOCAL_DP_RANK', 0))
-    return int(os.environ.get('LOCAL_RANK', 0))
+    if dataloader_process_group is not None:
+        ranks = dist.get_process_group_ranks(dataloader_process_group)
+        current_rank = dist.get_rank(dataloader_process_group)
+        local_device_number = int(os.environ.get('LOCAL_WORLD_SIZE', 0))
+        node_id = current_rank // local_device_number
+        ranks = [ri for ri in ranks if ri // local_device_number == node_id and ri < current_rank]
+        return len(ranks)
+    else:
+        return int(os.environ.get('LOCAL_RANK', 0))
 
 
-def get_local_world_size(process_group: Any = None) -> int:
+def get_local_world_size(dataloader_process_group: Any = None) -> int:
     """Returns the local world size, which is the number of processes for the current node.
 
     Returns:
         int: The local world size.
     """
-    if process_group is not None:
-        return int(os.environ.get('LOCAL_DP_WORLD_SIZE', 0))
+    if dataloader_process_group is not None:
+        ranks = dist.get_process_group_ranks(dataloader_process_group)
+        current_rank = dist.get_rank(dataloader_process_group)
+        local_device_number = int(os.environ.get('LOCAL_WORLD_SIZE', 0))
+        node_id = current_rank // local_device_number
+        ranks = [ri for ri in ranks if ri // local_device_number == node_id]
+        return len(ranks)
     else:
         return int(os.environ.get('LOCAL_WORLD_SIZE', 0))
 
