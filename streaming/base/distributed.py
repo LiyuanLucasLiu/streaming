@@ -50,7 +50,7 @@ def get_local_rank(dataloader_process_group: Any = None) -> int:
     """
     if dataloader_process_group is not None:
         ranks = dist.get_process_group_ranks(dataloader_process_group)
-        current_rank = dist.get_rank(dataloader_process_group)
+        current_rank = dist.get_rank()
         local_device_number = int(os.environ.get('LOCAL_WORLD_SIZE', 0))
         node_id = current_rank // local_device_number
         ranks = [ri for ri in ranks if ri // local_device_number == node_id and ri < current_rank]
@@ -67,10 +67,10 @@ def get_local_world_size(dataloader_process_group: Any = None) -> int:
     """
     if dataloader_process_group is not None:
         ranks = dist.get_process_group_ranks(dataloader_process_group)
-        current_rank = dist.get_rank(dataloader_process_group)
+        current_rank = dist.get_rank()
         local_device_number = int(os.environ.get('LOCAL_WORLD_SIZE', 0))
         node_id = current_rank // local_device_number
-        ranks = [ri for ri in ranks if ri // local_device_number == node_id]
+        ranks = [ri for ri in ranks if (ri // local_device_number) == node_id]
         return len(ranks)
     else:
         return int(os.environ.get('LOCAL_WORLD_SIZE', 0))
