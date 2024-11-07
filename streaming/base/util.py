@@ -195,7 +195,7 @@ def clean_stale_shared_memory(dataloader_process_group: Any = None) -> None:
 
     # Sync all ranks
     if dist.is_available() and dist.is_initialized():
-        dist.barrier()
+        dist.barrier(dataloader_process_group)
 
     # Delete the process group if Streaming initialized it.
     if destroy_dist:
