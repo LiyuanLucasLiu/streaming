@@ -721,13 +721,16 @@ class AzureUploader(CloudUploader):
                  exist_ok: bool = False) -> None:
         super().__init__(out, keep_local, progress_bar, retry, exist_ok)
 
+        from azure.identity import DefaultAzureCredential
         from azure.storage.blob import BlobServiceClient
 
         # Create a session and use it to make our client. Unlike Resources and Sessions,
         # clients are generally thread-safe.
+        token_credential = DefaultAzureCredential()
+        
         self.azure_service = BlobServiceClient(
             account_url=f"https://{os.environ['AZURE_ACCOUNT_NAME']}.blob.core.windows.net",
-            credential=os.environ['AZURE_ACCOUNT_ACCESS_KEY'],
+            credential=token_credential,
         )
         self.check_bucket_exists(self.remote)  # pyright: ignore
 
@@ -809,13 +812,16 @@ class AzureDataLakeUploader(CloudUploader):
                  exist_ok: bool = False) -> None:
         super().__init__(out, keep_local, progress_bar, retry, exist_ok)
 
+        from azure.identity import DefaultAzureCredential
         from azure.storage.filedatalake import DataLakeServiceClient
 
         # Create a session and use it to make our client. Unlike Resources and Sessions,
         # clients are generally thread-safe.
+        token_credential = DefaultAzureCredential()
+        
         self.azure_service = DataLakeServiceClient(
             account_url=f"https://{os.environ['AZURE_ACCOUNT_NAME']}.dfs.core.windows.net",
-            credential=os.environ['AZURE_ACCOUNT_ACCESS_KEY'])
+            credential=token_credential,)
         self.check_container_exists(self.remote)  # pyright: ignore
 
     def upload_file(self, filename: str):

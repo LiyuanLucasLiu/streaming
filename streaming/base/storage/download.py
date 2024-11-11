@@ -309,16 +309,18 @@ def download_from_azure(remote: str, local: str) -> None:
     """
     from azure.core.exceptions import ResourceNotFoundError
     from azure.storage.blob import BlobServiceClient
-
+    from azure.identity import DefaultAzureCredential
     obj = urllib.parse.urlparse(remote)
     if obj.scheme != 'azure':
         raise ValueError(
             f'Expected obj.scheme to be `azure`, instead, got {obj.scheme} for remote={remote}')
 
     # Create a new session per thread
+    
+    token_credential = DefaultAzureCredential()
     service = BlobServiceClient(
         account_url=f"https://{os.environ['AZURE_ACCOUNT_NAME']}.blob.core.windows.net",
-        credential=os.environ['AZURE_ACCOUNT_ACCESS_KEY'])
+        credential=token_credential)
     try:
         file_path = obj.path.lstrip('/').split('/')
         container_name = file_path[0]
@@ -344,6 +346,7 @@ def download_from_azure_datalake(remote: str, local: str) -> None:
     """
     from azure.core.exceptions import ResourceNotFoundError
     from azure.storage.filedatalake import DataLakeServiceClient
+    from azure.identity import DefaultAzureCredential
 
     obj = urllib.parse.urlparse(remote)
     if obj.scheme != 'azure-dl':
@@ -351,9 +354,10 @@ def download_from_azure_datalake(remote: str, local: str) -> None:
             f'Expected obj.scheme to be `azure-dl`, got {obj.scheme} for remote={remote}')
 
     # Create a new session per thread
+    token_credential = DefaultAzureCredential()
     service = DataLakeServiceClient(
         account_url=f"https://{os.environ['AZURE_ACCOUNT_NAME']}.dfs.core.windows.net",
-        credential=os.environ['AZURE_ACCOUNT_ACCESS_KEY'],
+        credential=token_credential,
     )
     try:
         file_client = service.get_file_client(file_system=obj.netloc,
